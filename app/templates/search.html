@@ -2,7 +2,9 @@
 {% block title %}Résultats{% endblock %}
 {% block content %}
 <h2>Résultats pour "{{ query }}"</h2>
-{% if results %}
+{% if error %}
+  <p class="error">Erreur : {{ error }}</p>
+{% elif results %}
   {% for r in results %}
   <div class="result">
     <a href="/watch?id={{ r.id }}">{{ r.title }}</a><br>

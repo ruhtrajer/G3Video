@@ -1,6 +1,7 @@
 import os
 import tempfile
 from flask import Flask, render_template, request, send_from_directory, jsonify
+from app.youtube import search_youtube
 
 app = Flask(__name__)
 app.config["VIDEO_DIR"] = os.path.join(tempfile.gettempdir(), "g3video")
@@ -15,7 +16,13 @@ def index():
 @app.route("/search")
 def search():
     query = request.args.get("q", "")
-    return render_template("search.html", query=query, results=[])
+    if not query:
+        return render_template("search.html", query="", results=[])
+    try:
+        results = search_youtube(query)
+    except Exception as e:
+        return render_template("search.html", query=query, results=[], error=str(e))
+    return render_template("search.html", query=query, results=results)
 
 @app.route("/watch")
 def watch():
