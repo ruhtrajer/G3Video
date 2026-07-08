@@ -7,7 +7,7 @@
 {% elif results %}
   {% for r in results %}
   <div class="result">
-    <a href="/watch?id={{ r.id }}">{{ r.title }}</a><br>
+    <a href="/watch?id={{ r.id | urlencode }}">{{ r.title }}</a><br>
     <small>{{ r.channel }} &mdash; {{ r.duration }}</small>
   </div>
   {% endfor %}

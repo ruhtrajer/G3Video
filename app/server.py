@@ -1,4 +1,5 @@
 import os
+import subprocess
 import tempfile
 from flask import Flask, render_template, request, send_from_directory, jsonify
 from app.youtube import search_youtube
@@ -20,8 +21,17 @@ def search():
         return render_template("search.html", query="", results=[])
     try:
         results = search_youtube(query)
-    except Exception as e:
+    except subprocess.TimeoutExpired:
+        return render_template("search.html", query=query, results=[],
+                              error="La recherche a pris trop de temps. Réessayez.")
+    except RuntimeError as e:
         return render_template("search.html", query=query, results=[], error=str(e))
+    except FileNotFoundError:
+        return render_template("search.html", query=query, results=[],
+                              error="yt-dlp introuvable. Vérifiez l'installation.")
+    except Exception as e:
+        return render_template("search.html", query=query, results=[],
+                              error=f"Erreur inattendue : {e}")
     return render_template("search.html", query=query, results=results)
 
 @app.route("/watch")
