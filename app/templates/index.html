@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Accueil{% endblock %}
+{% block content %}
+<form method="get" action="/search">
+<label for="q">Rechercher sur YouTube :</label><br>
+<input type="text" name="q" id="q" size="40">
+<button type="submit">Chercher</button>
+</form>
+{% endblock %}

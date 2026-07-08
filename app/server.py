@@ -1,0 +1,46 @@
+import os
+import subprocess
+import tempfile
+from flask import Flask, render_template, request, send_from_directory, jsonify
+
+app = Flask(__name__)
+app.config["VIDEO_DIR"] = os.path.join(tempfile.gettempdir(), "g3video")
+os.makedirs(app.config["VIDEO_DIR"], exist_ok=True)
+
+tasks = {}
+
+@app.route("/")
+def index():
+    return render_template("index.html")
+
+@app.route("/search")
+def search():
+    query = request.args.get("q", "")
+    return render_template("search.html", query=query, results=[])
+
+@app.route("/watch")
+def watch():
+    video_id = request.args.get("id", "")
+    return render_template("watch.html", video_id=video_id)
+
+@app.route("/status/<video_id>")
+def status(video_id):
+    task = tasks.get(video_id, {"status": "unknown"})
+    return jsonify(task)
+
+@app.route("/videos/<video_id>.mov")
+def serve_video(video_id):
+    return send_from_directory(app.config["VIDEO_DIR"], f"{video_id}.mov")
+
+@app.route("/videos/<video_id>.qtl")
+def serve_qtl(video_id):
+    content = f'''<?xml version="1.0"?>
+<?quicktime type="application/x-quicktime-media-link"?>
+<embed src="http://{request.host}/videos/{video_id}.mov"
+       autoplay="true"
+       cache="false" />
+'''
+    return content, 200, {"Content-Type": "application/x-quicktime-media-link"}
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000, debug=True)

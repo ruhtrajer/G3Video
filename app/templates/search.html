@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Résultats{% endblock %}
+{% block content %}
+<h2>Résultats pour "{{ query }}"</h2>
+{% if results %}
+  {% for r in results %}
+  <div class="result">
+    <a href="/watch?id={{ r.id }}">{{ r.title }}</a><br>
+    <small>{{ r.channel }} &mdash; {{ r.duration }}</small>
+  </div>
+  {% endfor %}
+{% else %}
+  <p>Aucun résultat.</p>
+{% endif %}
+<p><a href="/">Nouvelle recherche</a></p>
+{% endblock %}
