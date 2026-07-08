@@ -3,6 +3,7 @@ import subprocess
 import tempfile
 from flask import Flask, render_template, request, send_from_directory, jsonify
 from app.youtube import search_youtube
+from app.transcoder import start_transcode
 
 app = Flask(__name__)
 app.config["VIDEO_DIR"] = os.path.join(tempfile.gettempdir(), "g3video")
@@ -38,6 +39,9 @@ def search():
 def watch():
     video_id = request.args.get("id", "")
     task = tasks.get(video_id, {})
+    if not task:
+        start_transcode(video_id, app.config["VIDEO_DIR"], tasks)
+        task = tasks.get(video_id, {})
     return render_template("watch.html",
                            video_id=video_id,
                            title=task.get("title", "Vidéo"),
