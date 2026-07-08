@@ -89,12 +89,14 @@
 | Propriété | Valeur |
 |---|---|
 | Conteneur | `.mov` |
-| Codec vidéo | Sorenson Video 3 (svq3) |
-| Codec audio | QDesign Music 2 (qdm2) |
+| Codec vidéo | `svq3` (Sorenson Video 3) ou `mpeg4` (fallback) |
+| Codec audio | `qdm2` (QDesign Music 2) ou `adpcm_ima_qt` (fallback) |
 | Résolution | 320×240 |
 | Débit vidéo | ~500 kbps |
 | Audio | 22 kHz mono, ~32 kbps |
 | Faststart | `-movflags +faststart` |
+
+Les encodeurs sont détectés automatiquement au premier transcodage. Si `svq3` ou `qdm2` ne sont pas disponibles dans votre build ffmpeg, le serveur bascule sur `mpeg4` + `adpcm_ima_qt` sans intervention manuelle.
 
 ---
 

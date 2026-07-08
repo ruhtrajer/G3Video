@@ -9,6 +9,43 @@ logger = logging.getLogger(__name__)
 
 VIDEO_ID_PATTERN = re.compile(r"^[a-zA-Z0-9_-]{11}$")
 
+_VIDEO_ENCODER = None
+_AUDIO_ENCODER = None
+_ENCODER_LOCK = threading.Lock()
+
+
+def _detect_encoders():
+    global _VIDEO_ENCODER, _AUDIO_ENCODER
+    with _ENCODER_LOCK:
+        if _VIDEO_ENCODER is not None:
+            return _VIDEO_ENCODER, _AUDIO_ENCODER
+
+        try:
+            r = subprocess.run(
+                ["ffmpeg", "-encoders"],
+                capture_output=True, text=True, timeout=10
+            )
+            encoders = r.stdout + r.stderr
+
+            if "svq3" in encoders:
+                _VIDEO_ENCODER = "svq3"
+            else:
+                logger.info("svq3 non disponible, utilisation de mpeg4")
+                _VIDEO_ENCODER = "mpeg4"
+
+            if "qdm2" in encoders:
+                _AUDIO_ENCODER = "qdm2"
+            else:
+                logger.info("qdm2 non disponible, utilisation de adpcm_ima_qt")
+                _AUDIO_ENCODER = "adpcm_ima_qt"
+        except Exception as e:
+            logger.warning("Détection d'encodeurs échouée, utilisation des valeurs par défaut: %s", e)
+            _VIDEO_ENCODER = "mpeg4"
+            _AUDIO_ENCODER = "adpcm_ima_qt"
+
+        logger.info("Encodeurs détectés : vidéo=%s, audio=%s", _VIDEO_ENCODER, _AUDIO_ENCODER)
+        return _VIDEO_ENCODER, _AUDIO_ENCODER
+
 
 def sanitize_video_id(video_id: str) -> str:
     if not VIDEO_ID_PATTERN.match(video_id):
@@ -56,13 +93,19 @@ def _run_transcode(video_id, output_dir, tasks, lock):
         with lock:
             tasks[video_id] = {"status": "transcoding", "progress": 40, "title": title, "description": description}
 
+        video_enc, audio_enc = _detect_encoders()
+
         cmd = [
             "ffmpeg", "-y",
             "-i", intermediary,
-            "-c:v", "svq3",
+            "-c:v", video_enc,
             "-b:v", "500k",
             "-s", "320x240",
-            "-c:a", "qdm2",
+        ]
+        if video_enc == "mpeg4":
+            cmd += ["-vtag", "mp4v"]
+        cmd += [
+            "-c:a", audio_enc,
             "-b:a", "32k",
             "-ar", "22050",
             "-ac", "1",
