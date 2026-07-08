@@ -21,7 +21,14 @@ def search():
 @app.route("/watch")
 def watch():
     video_id = request.args.get("id", "")
-    return render_template("watch.html", video_id=video_id)
+    task = tasks.get(video_id, {})
+    return render_template("watch.html",
+                           video_id=video_id,
+                           title=task.get("title", "Vidéo"),
+                           description=task.get("description", ""),
+                           status=task.get("status", ""),
+                           progress=task.get("progress", 0),
+                           error=task.get("error", ""))
 
 @app.route("/status/<video_id>")
 def status(video_id):
