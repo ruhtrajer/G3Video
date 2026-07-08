@@ -1,5 +1,10 @@
 {% extends "base.html" %}
 {% block title %}Vidéo{% endblock %}
+{% block head_extra %}
+{% if status == "processing" or status == "queued" %}
+<meta http-equiv="refresh" content="3">
+{% endif %}
+{% endblock %}
 {% block content %}
 <h2>{{ title }}</h2>
 <p>{{ description }}</p>
@@ -9,13 +14,11 @@
   <p>Alternative : <a href="/videos/{{ video_id }}.mov">Télécharger le .mov</a></p>
 {% elif status == "processing" %}
   <p>Transcodage en cours... {{ progress }}%</p>
-  <meta http-equiv="refresh" content="3">
 {% elif status == "queued" %}
   <p>Vidéo en attente de traitement...</p>
-  <meta http-equiv="refresh" content="3">
 {% else %}
-  <p>Erreur : {{ error }}</p>
+  {% if error %}<p>Erreur : {{ error }}</p>{% endif %}
 {% endif %}
 </div>
-<p><a href="javascript:history.back()">Retour</a></p>
+<p><a href="/">Retour à l'accueil</a></p>
 {% endblock %}

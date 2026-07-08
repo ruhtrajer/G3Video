@@ -1,5 +1,4 @@
 import os
-import subprocess
 import tempfile
 from flask import Flask, render_template, request, send_from_directory, jsonify
 
@@ -43,11 +42,12 @@ def serve_video(video_id):
 def serve_qtl(video_id):
     content = f'''<?xml version="1.0"?>
 <?quicktime type="application/x-quicktime-media-link"?>
-<embed src="http://{request.host}/videos/{video_id}.mov"
+<embed src="{request.host_url}videos/{video_id}.mov"
        autoplay="true"
        cache="false" />
 '''
     return content, 200, {"Content-Type": "application/x-quicktime-media-link"}
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    debug = os.getenv("FLASK_DEBUG", "").lower() in ("1", "true")
+    app.run(host="0.0.0.0", port=5000, debug=debug)
