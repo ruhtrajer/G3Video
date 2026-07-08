@@ -34,6 +34,7 @@ def _fetch_title(video_id):
 
 
 def _run_transcode(video_id, output_dir, tasks, lock):
+    intermediary = None
     try:
         with lock:
             tasks[video_id] = {"status": "downloading", "progress": 5, "title": "Vidéo", "description": ""}
@@ -82,7 +83,7 @@ def _run_transcode(video_id, output_dir, tasks, lock):
         logger.error("Timeout during transcode for %s", video_id)
         with lock:
             tasks[video_id] = {"status": "error", "error": "Le téléchargement ou transcodage a pris trop de temps."}
-        if os.path.exists(intermediary):
+        if intermediary and os.path.exists(intermediary):
             os.remove(intermediary)
     except Exception as e:
         logger.error("Transcode error for %s: %s", video_id, e)

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Vidéo{% endblock %}
 {% block head_extra %}
-{% if status == "processing" or status == "queued" %}
+{% if status in ("processing", "queued", "downloading", "transcoding") %}
 <meta http-equiv="refresh" content="3">
 {% endif %}
 {% endblock %}
@@ -12,8 +12,8 @@
 {% if status == "ready" %}
   <p><a href="/videos/{{ video_id }}.qtl">Regarder dans QuickTime</a></p>
   <p>Alternative : <a href="/videos/{{ video_id }}.mov">Télécharger le .mov</a></p>
-{% elif status == "processing" %}
-  <p>Transcodage en cours... {{ progress }}%</p>
+{% elif status in ("processing", "downloading", "transcoding") %}
+  <p>{{ status }}... {{ progress }}%</p>
 {% elif status == "queued" %}
   <p>Vidéo en attente de traitement...</p>
 {% else %}
