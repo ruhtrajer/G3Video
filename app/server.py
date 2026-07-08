@@ -1,4 +1,5 @@
 import os
+import time
 import subprocess
 import tempfile
 import threading
@@ -16,6 +17,24 @@ os.makedirs(app.config["VIDEO_DIR"], exist_ok=True)
 
 tasks = {}
 tasks_lock = threading.Lock()
+
+CLEANUP_INTERVAL = 300
+FILE_TTL = 3600
+
+
+def _cleanup_old_files():
+    while True:
+        time.sleep(CLEANUP_INTERVAL)
+        now = time.time()
+        for fname in os.listdir(app.config["VIDEO_DIR"]):
+            fpath = os.path.join(app.config["VIDEO_DIR"], fname)
+            if os.path.isfile(fpath) and now - os.path.getmtime(fpath) > FILE_TTL:
+                os.remove(fpath)
+                logger.info("Nettoyage : supprimé %s", fname)
+
+
+cleanup_thread = threading.Thread(target=_cleanup_old_files, daemon=True)
+cleanup_thread.start()
 
 
 @app.route("/")
