@@ -10,7 +10,7 @@
 <p>{{ description }}</p>
 <div id="status">
 {% if status == "ready" %}
-  <p><a href="/play/{{ video_id }}">Regarder dans QuickTime</a></p>
+  <p><a href="/videos/{{ video_id }}.qtl">Regarder dans QuickTime</a></p>
   <p>Alternative : <a href="/videos/{{ video_id }}.mov">Télécharger le .mov</a></p>
 {% elif status in ("processing", "downloading", "transcoding") %}
   <p>{{ status }}... {{ progress }}%</p>

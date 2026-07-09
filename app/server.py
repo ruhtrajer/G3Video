@@ -4,7 +4,7 @@ import subprocess
 import tempfile
 import threading
 import logging
-from flask import Flask, render_template, request, send_from_directory, jsonify, redirect, url_for
+from flask import Flask, render_template, request, send_from_directory, jsonify
 from app.youtube import search_youtube
 from app.transcoder import start_transcode, sanitize_video_id
 
@@ -71,8 +71,7 @@ def watch():
     except ValueError as e:
         return render_template("watch.html", video_id=video_id, status="error", error=str(e))
 
-    base_url = request.host_url
-    start_transcode(video_id, app.config["VIDEO_DIR"], tasks, tasks_lock, base_url)
+    start_transcode(video_id, app.config["VIDEO_DIR"], tasks, tasks_lock)
 
     with tasks_lock:
         task = tasks.get(video_id, {})
@@ -97,24 +96,17 @@ def status(video_id):
 def serve_video(video_id):
     return send_from_directory(
         app.config["VIDEO_DIR"], f"{video_id}.mov",
-        mimetype="video/quicktime"
+        mimetype="video/quicktime",
+        as_attachment=True
     )
-
-
-@app.route("/play/<video_id>")
-def play_video(video_id):
-    ref_path = os.path.join(app.config["VIDEO_DIR"], f"{video_id}.ref.mov")
-    if os.path.exists(ref_path):
-        return send_from_directory(
-            app.config["VIDEO_DIR"], f"{video_id}.ref.mov",
-            mimetype="video/quicktime"
-        )
-    return redirect(url_for("serve_video", video_id=video_id))
 
 
 @app.route("/videos/<video_id>.qtl")
 def serve_qtl(video_id):
-    return redirect(url_for("play_video", video_id=video_id))
+    return send_from_directory(
+        app.config["VIDEO_DIR"], f"{video_id}.mov",
+        mimetype="video/quicktime"
+    )
 
 
 if __name__ == "__main__":
