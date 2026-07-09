@@ -6,7 +6,7 @@ import threading
 import logging
 from flask import Flask, render_template, request, send_from_directory, jsonify
 from app.youtube import search_youtube
-from app.transcoder import start_transcode, sanitize_video_id, sanitize_filename
+from app.transcoder import start_transcode, sanitize_video_id, sanitize_filename, FORMAT_MODES
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -71,7 +71,11 @@ def watch():
     except ValueError as e:
         return render_template("watch.html", video_id=video_id, status="error", error=str(e))
 
-    start_transcode(video_id, app.config["VIDEO_DIR"], tasks, tasks_lock)
+    raw_format = request.args.get("format", "crop")
+    if raw_format not in FORMAT_MODES:
+        raw_format = "crop"
+
+    start_transcode(video_id, app.config["VIDEO_DIR"], tasks, tasks_lock, format_mode=raw_format)
 
     with tasks_lock:
         task = tasks.get(video_id, {})
@@ -82,7 +86,8 @@ def watch():
                            description=task.get("description", ""),
                            status=task.get("status", ""),
                            progress=task.get("progress", 0),
-                           error=task.get("error", ""),)
+                           error=task.get("error", ""),
+                           format_mode=task.get("format_mode", raw_format),)
 
 
 @app.route("/status/<video_id>")

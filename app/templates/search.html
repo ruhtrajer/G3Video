@@ -7,8 +7,13 @@
 {% elif results %}
   {% for r in results %}
   <div class="result">
-    <a href="/watch?id={{ r.id | urlencode }}">{{ r.title }}</a><br>
-    <small>{{ r.channel }} &mdash; {{ r.duration }}</small>
+    <a href="/watch?id={{ r.id | urlencode }}&format=crop"><strong>{{ r.title }}</strong></a><br>
+    <small>
+      <a href="/watch?id={{ r.id | urlencode }}&format=crop">Regarder (4:3)</a>
+      &nbsp;|&nbsp;
+      <a href="/watch?id={{ r.id | urlencode }}&format=original">Format original</a>
+      &mdash; {{ r.channel }} &mdash; {{ r.duration }}
+    </small>
   </div>
   {% endfor %}
 {% else %}

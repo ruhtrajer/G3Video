@@ -8,6 +8,9 @@
 {% block content %}
 <h2>{{ title }}</h2>
 <p>{{ description }}</p>
+{% if format_mode %}
+<p>Format : <strong>{{ "4:3 (recadr\u00e9)" if format_mode == "crop" else "Original (bandes noires)" }}</strong></p>
+{% endif %}
 <div id="status">
 {% if status == "ready" %}
   <p><a href="/videos/{{ video_id }}.qtl">Regarder dans QuickTime</a></p>
