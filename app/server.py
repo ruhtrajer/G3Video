@@ -6,7 +6,7 @@ import threading
 import logging
 from flask import Flask, render_template, request, send_from_directory, jsonify
 from app.youtube import search_youtube
-from app.transcoder import start_transcode, sanitize_video_id
+from app.transcoder import start_transcode, sanitize_video_id, sanitize_filename
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -94,10 +94,20 @@ def status(video_id):
 
 @app.route("/videos/<video_id>.mov")
 def serve_video(video_id):
+    with tasks_lock:
+        task = tasks.get(video_id, {})
+        title = task.get("title")
+
+    if title and title.strip():
+        download_name = sanitize_filename(title) + ".mov"
+    else:
+        download_name = f"{video_id}.mov"
+
     return send_from_directory(
         app.config["VIDEO_DIR"], f"{video_id}.mov",
         mimetype="video/quicktime",
-        as_attachment=True
+        as_attachment=True,
+        download_name=download_name
     )
 
 
