@@ -63,3 +63,41 @@ def test_qtl_route_unchanged(client, mocker):
     assert resp.status_code == 200
     cd = resp.headers.get("Content-Disposition", "")
     assert cd is None or not cd.startswith("attachment")
+
+
+def test_watch_default_format(client, mocker):
+    mocker.patch("app.server.start_transcode")
+    resp = client.get("/watch?id=abc123def45")
+    assert resp.status_code == 200
+
+
+def test_watch_with_format_crop(client, mocker):
+    mock_start = mocker.patch("app.server.start_transcode")
+    client.get("/watch?id=abc123def45&format=crop")
+    mock_start.assert_called_once()
+    _, kwargs = mock_start.call_args
+    assert kwargs.get("format_mode") == "crop"
+
+
+def test_watch_with_format_original(client, mocker):
+    mock_start = mocker.patch("app.server.start_transcode")
+    client.get("/watch?id=abc123def45&format=original")
+    mock_start.assert_called_once()
+    _, kwargs = mock_start.call_args
+    assert kwargs.get("format_mode") == "original"
+
+
+def test_watch_invalid_format_defaults_to_crop(client, mocker):
+    mock_start = mocker.patch("app.server.start_transcode")
+    client.get("/watch?id=abc123def45&format=stretch")
+    mock_start.assert_called_once()
+    _, kwargs = mock_start.call_args
+    assert kwargs.get("format_mode") == "crop"
+
+
+def test_watch_empty_format_defaults_to_crop(client, mocker):
+    mock_start = mocker.patch("app.server.start_transcode")
+    client.get("/watch?id=abc123def45&format=")
+    mock_start.assert_called_once()
+    _, kwargs = mock_start.call_args
+    assert kwargs.get("format_mode") == "crop"

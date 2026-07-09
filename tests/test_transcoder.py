@@ -1,5 +1,5 @@
 import pytest
-from app.transcoder import sanitize_filename
+from app.transcoder import sanitize_filename, _build_vf_filter
 
 
 def test_sanitize_filename_accent():
@@ -49,3 +49,21 @@ def test_sanitize_filename_multiple_underscores():
 
 def test_sanitize_filename_lowercase():
     assert sanitize_filename("HELLO World") == "hello_world"
+
+
+class TestBuildVfFilter:
+    def test_crop_filter(self):
+        result = _build_vf_filter("crop")
+        assert result == "scale=320:240:force_original_aspect_ratio=increase,crop=320:240"
+
+    def test_original_filter(self):
+        result = _build_vf_filter("original")
+        assert result == "scale=320:240:force_original_aspect_ratio=decrease,pad=320:240:(ow-iw)/2:(oh-ih)/2:color=black"
+
+    def test_invalid_format_raises(self):
+        with pytest.raises(ValueError, match="format_mode invalide"):
+            _build_vf_filter("invalid")
+
+    def test_empty_string_raises(self):
+        with pytest.raises(ValueError, match="format_mode invalide"):
+            _build_vf_filter("")

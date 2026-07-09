@@ -62,6 +62,18 @@ def _detect_encoders():
         return _VIDEO_ENCODER, _AUDIO_ENCODER
 
 
+FORMAT_MODES = ("crop", "original")
+
+
+def _build_vf_filter(format_mode: str) -> str:
+    if format_mode == "crop":
+        return "scale=320:240:force_original_aspect_ratio=increase,crop=320:240"
+    elif format_mode == "original":
+        return "scale=320:240:force_original_aspect_ratio=decrease,pad=320:240:(ow-iw)/2:(oh-ih)/2:color=black"
+    else:
+        raise ValueError(f"format_mode invalide : {format_mode!r}. Accepté : 'crop' ou 'original'.")
+
+
 def sanitize_video_id(video_id: str) -> str:
     if not VIDEO_ID_PATTERN.match(video_id):
         raise ValueError("ID de vidéo invalide")
@@ -85,18 +97,18 @@ def _fetch_title(video_id):
         return "Vidéo", ""
 
 
-def _run_transcode(video_id, output_dir, tasks, lock):
+def _run_transcode(video_id, output_dir, tasks, lock, format_mode="crop"):
     intermediary = None
     try:
         with lock:
-            tasks[video_id] = {"status": "downloading", "progress": 5, "title": "Vidéo", "description": ""}
+            tasks[video_id] = {"status": "downloading", "progress": 5, "title": "Vidéo", "description": "", "format_mode": format_mode}
 
         title, description = _fetch_title(video_id)
         intermediary = os.path.join(output_dir, f"{video_id}.mp4")
         output_path = os.path.join(output_dir, f"{video_id}.mov")
 
         with lock:
-            tasks[video_id] = {"status": "downloading", "progress": 10, "title": title, "description": description}
+            tasks[video_id] = {"status": "downloading", "progress": 10, "title": title, "description": description, "format_mode": format_mode}
 
         d = subprocess.run(
             ["yt-dlp", "-f", "best[height<=480]", "-o", intermediary, video_id],
@@ -106,7 +118,7 @@ def _run_transcode(video_id, output_dir, tasks, lock):
             raise RuntimeError(f"yt-dlp a échoué : {d.stderr.strip()}")
 
         with lock:
-            tasks[video_id] = {"status": "transcoding", "progress": 40, "title": title, "description": description}
+            tasks[video_id] = {"status": "transcoding", "progress": 40, "title": title, "description": description, "format_mode": format_mode}
 
         video_enc, audio_enc = _detect_encoders()
 
@@ -115,7 +127,7 @@ def _run_transcode(video_id, output_dir, tasks, lock):
             "-i", intermediary,
             "-c:v", video_enc,
             "-b:v", "500k",
-            "-s", "320x240",
+            "-vf", _build_vf_filter(format_mode),
         ]
         if video_enc == "mpeg4":
             cmd += ["-vtag", "mp4v"]
@@ -138,6 +150,7 @@ def _run_transcode(video_id, output_dir, tasks, lock):
             tasks[video_id] = {
                 "status": "ready", "progress": 100,
                 "title": title, "description": description,
+                "format_mode": format_mode,
             }
 
     except subprocess.TimeoutExpired:
@@ -152,10 +165,10 @@ def _run_transcode(video_id, output_dir, tasks, lock):
             tasks[video_id] = {"status": "error", "error": str(e)}
 
 
-def start_transcode(video_id, output_dir, tasks, lock):
+def start_transcode(video_id, output_dir, tasks, lock, format_mode="crop"):
     with lock:
         if video_id in tasks and tasks[video_id].get("status") not in ("error",):
             return
-        tasks[video_id] = {"status": "queued", "progress": 0}
-    thread = threading.Thread(target=_run_transcode, args=(video_id, output_dir, tasks, lock), daemon=True)
+        tasks[video_id] = {"status": "queued", "progress": 0, "format_mode": format_mode}
+    thread = threading.Thread(target=_run_transcode, args=(video_id, output_dir, tasks, lock, format_mode), daemon=True)
     thread.start()
