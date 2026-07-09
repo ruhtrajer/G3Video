@@ -5,6 +5,8 @@ import threading
 import json
 import logging
 
+from app.reference_movie import make_reference_movie
+
 logger = logging.getLogger(__name__)
 
 VIDEO_ID_PATTERN = re.compile(r"^[a-zA-Z0-9_-]{11}$")
@@ -72,8 +74,10 @@ def _fetch_title(video_id):
 
 def _run_transcode(video_id, output_dir, tasks, lock):
     intermediary = None
+    base_url = None
     try:
         with lock:
+            base_url = tasks.get(video_id, {}).get("base_url")
             tasks[video_id] = {"status": "downloading", "progress": 5, "title": "Vidéo", "description": ""}
 
         title, description = _fetch_title(video_id)
@@ -120,7 +124,22 @@ def _run_transcode(video_id, output_dir, tasks, lock):
             os.remove(intermediary)
 
         with lock:
-            tasks[video_id] = {"status": "ready", "progress": 100, "title": title, "description": description}
+            tasks[video_id] = {
+                "status": "ready", "progress": 100,
+                "title": title, "description": description,
+            }
+
+        if base_url:
+            ref_path = os.path.join(output_dir, f"{video_id}.ref.mov")
+            video_url = f"{base_url.rstrip('/')}/videos/{video_id}.mov"
+            try:
+                ref_data = make_reference_movie(output_path, video_url)
+                with open(ref_path, "wb") as f_out:
+                    f_out.write(ref_data)
+                with lock:
+                    tasks[video_id]["has_ref"] = True
+            except Exception as e:
+                logger.warning("Reference movie generation failed for %s: %s", video_id, e)
 
     except subprocess.TimeoutExpired:
         logger.error("Timeout during transcode for %s", video_id)
@@ -134,10 +153,10 @@ def _run_transcode(video_id, output_dir, tasks, lock):
             tasks[video_id] = {"status": "error", "error": str(e)}
 
 
-def start_transcode(video_id, output_dir, tasks, lock):
+def start_transcode(video_id, output_dir, tasks, lock, base_url=None):
     with lock:
         if video_id in tasks and tasks[video_id].get("status") not in ("error",):
             return
-        tasks[video_id] = {"status": "queued", "progress": 0}
+        tasks[video_id] = {"status": "queued", "progress": 0, "base_url": base_url}
     thread = threading.Thread(target=_run_transcode, args=(video_id, output_dir, tasks, lock), daemon=True)
     thread.start()
