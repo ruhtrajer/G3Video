@@ -1,11 +1,26 @@
 import os
 import re
+import unicodedata
 import subprocess
 import threading
 import json
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+def sanitize_filename(title: str) -> str:
+    if not title:
+        return ""
+    normalized = unicodedata.normalize("NFD", title)
+    ascii_only = normalized.encode("ascii", "ignore").decode("ascii")
+    ascii_only = ascii_only.replace("-", "_").replace(" ", "_")
+    ascii_only = re.sub(r"[^a-zA-Z0-9_]", "", ascii_only)
+    ascii_only = re.sub(r"_+", "_", ascii_only)
+    ascii_only = ascii_only.strip("_")
+    ascii_only = ascii_only.lower()
+    return ascii_only[:64]
+
 
 VIDEO_ID_PATTERN = re.compile(r"^[a-zA-Z0-9_-]{11}$")
 
