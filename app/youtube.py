@@ -5,7 +5,11 @@ import shutil
 YTDLP_TIMEOUT = 30
 
 
-def _format_duration(seconds: int) -> str:
+def _format_duration(seconds) -> str:
+    try:
+        seconds = int(seconds or 0)
+    except (TypeError, ValueError):
+        seconds = 0
     hours = seconds // 3600
     minutes = (seconds % 3600) // 60
     secs = seconds % 60
