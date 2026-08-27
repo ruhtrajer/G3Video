@@ -1,5 +1,7 @@
 import os
 import re
+import glob
+import shutil
 import unicodedata
 import subprocess
 import threading
@@ -7,6 +9,33 @@ import json
 import logging
 
 logger = logging.getLogger(__name__)
+
+DOWNLOAD_FORMAT = "bestvideo[height<=480]+bestaudio/best[height<=480]"
+
+
+def _node_runtime_args():
+    """Renvoie les arguments yt-dlp pour utiliser node comme runtime JS si disponible.
+
+    yt-dlp ne trouve pas toujours node seul (ex. node installé via nvm hors PATH du
+    serveur). On localise node explicitement pour activer l'extraction YouTube complète
+    et éviter l'avertissement de déprécation. Retourne [] si aucun runtime n'est trouvé.
+    """
+    candidates = []
+    node_in_path = shutil.which("node")
+    if node_in_path:
+        candidates.append(node_in_path)
+    nvm_dir = os.path.expanduser("~/.nvm/versions/node")
+    if os.path.isdir(nvm_dir):
+        for path in sorted(glob.glob(os.path.join(nvm_dir, "*", "bin", "node"))):
+            candidates.append(path)
+    for path in ("/usr/local/bin/node", "/usr/bin/node", "/opt/homebrew/bin/node"):
+        if os.path.exists(path):
+            candidates.append(path)
+
+    for node in candidates:
+        if os.path.exists(node):
+            return ["--js-runtimes", f"node:{node}"]
+    return []
 
 
 def sanitize_filename(title: str) -> str:
@@ -83,7 +112,7 @@ def sanitize_video_id(video_id: str) -> str:
 def _fetch_title(video_id):
     try:
         result = subprocess.run(
-            ["yt-dlp", "--dump-json", video_id],
+            ["yt-dlp", *_node_runtime_args(), "--dump-json", video_id],
             capture_output=True, text=True, timeout=15
         )
         if result.returncode != 0:
@@ -111,7 +140,7 @@ def _run_transcode(video_id, output_dir, tasks, lock, format_mode="crop"):
             tasks[video_id] = {"status": "downloading", "progress": 10, "title": title, "description": description, "format_mode": format_mode}
 
         d = subprocess.run(
-            ["yt-dlp", "-f", "best[height<=480]", "-o", intermediary, video_id],
+            ["yt-dlp", *_node_runtime_args(), "-f", DOWNLOAD_FORMAT, "--merge-output-format", "mp4", "-o", intermediary, video_id],
             capture_output=True, text=True, timeout=300
         )
         if d.returncode != 0:
