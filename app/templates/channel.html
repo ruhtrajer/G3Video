@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}{{ channel_name or "Chaîne" }}{% endblock %}
+{% block content %}
+{% if channel_id %}
+<p class="channel"><a href="/channel?id={{ channel_id | urlencode }}"><img src="/chanimg/{{ channel_id | urlencode }}" alt="{{ channel_name }}" width="48" height="48"></a> <strong>{{ channel_name or "Vidéos de la chaîne" }}</strong></p>
+{% endif %}
+<h2>{{ channel_name or "Vidéos de la chaîne" }}</h2>
+{% if error %}
+  <p class="error">Erreur : {{ error }}</p>
+{% elif results %}
+  {% for r in results %}
+  {% set watch_base = "/watch?id=" ~ r.id | urlencode ~ "&amp;back=" ~ ("/channel?id=" ~ channel_id) | urlencode %}
+  <div class="result">
+    <table summary="" border="0" cellpadding="0" cellspacing="0"><tr>
+    {% if r.thumbnail %}
+    <td class="thumb"><a href="{{ watch_base }}&amp;format=crop"><img src="{{ r.thumbnail }}" alt="{{ r.title }}" width="120" height="90"></a></td>
+    {% endif %}
+    <td class="info">
+    <a href="{{ watch_base }}&amp;format=crop"><strong>{{ r.title }}</strong></a><br>
+    <small>
+      <a href="{{ watch_base }}&amp;format=crop">Regarder (4:3)</a>
+      &nbsp;|&nbsp;
+      <a href="{{ watch_base }}&amp;format=original">Format original</a>
+      &mdash; {{ r.duration }}
+    </small>
+    </td>
+    </tr></table>
+  </div>
+  {% endfor %}
+{% else %}
+  <p>Aucune vidéo.</p>
+{% endif %}
+<p><a href="/">Retour à l'accueil</a></p>
+{% endblock %}

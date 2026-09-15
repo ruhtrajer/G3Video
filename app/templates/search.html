@@ -6,17 +6,21 @@
   <p class="error">Erreur : {{ error }}</p>
 {% elif results %}
   {% for r in results %}
+  {% set watch_base = "/watch?id=" ~ r.id | urlencode ~ "&amp;back=" ~ ("/search?q=" ~ query) | urlencode %}
   <div class="result">
     <table summary="" border="0" cellpadding="0" cellspacing="0"><tr>
     {% if r.thumbnail %}
-    <td class="thumb"><a href="/watch?id={{ r.id | urlencode }}&amp;format=crop"><img src="{{ r.thumbnail }}" alt="{{ r.title }}" width="120" height="90"></a></td>
+    <td class="thumb"><a href="{{ watch_base }}&amp;format=crop"><img src="{{ r.thumbnail }}" alt="{{ r.title }}" width="120" height="90"></a></td>
+    {% endif %}
+    {% if r.channel_id %}
+    <td class="chanlogo"><a href="/channel?id={{ r.channel_id | urlencode }}"><img src="/chanimg/{{ r.channel_id | urlencode }}" alt="{{ r.channel }}" width="48" height="48"></a></td>
     {% endif %}
     <td class="info">
-    <a href="/watch?id={{ r.id | urlencode }}&amp;format=crop"><strong>{{ r.title }}</strong></a><br>
+    <a href="{{ watch_base }}&amp;format=crop"><strong>{{ r.title }}</strong></a><br>
     <small>
-      <a href="/watch?id={{ r.id | urlencode }}&amp;format=crop">Regarder (4:3)</a>
+      <a href="{{ watch_base }}&amp;format=crop">Regarder (4:3)</a>
       &nbsp;|&nbsp;
-      <a href="/watch?id={{ r.id | urlencode }}&amp;format=original">Format original</a>
+      <a href="{{ watch_base }}&amp;format=original">Format original</a>
       &mdash; {{ r.channel }} &mdash; {{ r.duration }}
     </small>
     </td>

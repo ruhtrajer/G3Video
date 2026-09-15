@@ -23,5 +23,8 @@
   {% if error %}<p>Erreur : {{ error }}</p>{% endif %}
 {% endif %}
 </div>
+{% if back %}
+<p><a href="{{ back }}">Retour à la liste des résultats</a></p>
+{% endif %}
 <p><a href="/">Retour à l'accueil</a></p>
 {% endblock %}

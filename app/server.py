@@ -6,7 +6,7 @@ import threading
 import logging
 import urllib.request
 from flask import Flask, render_template, request, send_from_directory, jsonify, abort
-from app.youtube import search_youtube
+from app.youtube import search_youtube, list_channel_videos, get_channel_avatar_url, CHANNEL_ID_PATTERN
 from app.transcoder import start_transcode, sanitize_video_id, sanitize_filename, FORMAT_MODES
 
 logging.basicConfig(level=logging.INFO)
@@ -70,6 +70,33 @@ def search():
     return render_template("search.html", query=query, results=results)
 
 
+@app.route("/channel")
+def channel():
+    channel_id = request.args.get("id", "")
+    if not channel_id or not channel_id.strip():
+        return render_template("channel.html", channel_id="", channel_name="", results=[],
+                               error="Aucun identifiant de chaîne fourni.")
+    if not CHANNEL_ID_PATTERN.match(channel_id):
+        return render_template("channel.html", channel_id=channel_id, channel_name="",
+                               results=[], error=f"Identifiant de chaîne invalide : {channel_id}")
+    try:
+        channel_name, results = list_channel_videos(channel_id)
+    except ValueError as e:
+        return render_template("channel.html", channel_id=channel_id, channel_name="",
+                               results=[], error=str(e))
+    except subprocess.TimeoutExpired:
+        return render_template("channel.html", channel_id=channel_id, channel_name="",
+                               results=[], error="La requête a pris trop de temps. Réessayez.")
+    except RuntimeError as e:
+        return render_template("channel.html", channel_id=channel_id, channel_name="",
+                               results=[], error=str(e))
+    except Exception as e:
+        return render_template("channel.html", channel_id=channel_id, channel_name="",
+                               results=[], error=f"Erreur inattendue : {e}")
+    return render_template("channel.html", channel_id=channel_id,
+                           channel_name=channel_name, results=results)
+
+
 @app.route("/watch")
 def watch():
     video_id = request.args.get("id", "")
@@ -81,6 +108,10 @@ def watch():
     raw_format = request.args.get("format", "crop")
     if raw_format not in FORMAT_MODES:
         raw_format = "crop"
+
+    back = request.args.get("back", "")
+    if not (back.startswith("/search?q=") or back.startswith("/channel?id=")):
+        back = ""
 
     start_transcode(video_id, app.config["VIDEO_DIR"], tasks, tasks_lock, format_mode=raw_format)
 
@@ -94,7 +125,8 @@ def watch():
                            status=task.get("status", ""),
                            progress=task.get("progress", 0),
                            error=task.get("error", ""),
-                           format_mode=task.get("format_mode", raw_format),)
+                           format_mode=task.get("format_mode", raw_format),
+                           back=back,)
 
 
 @app.route("/status/<video_id>")
@@ -126,6 +158,34 @@ def serve_thumbnail(video_id):
                 os.remove(fpath)
             abort(404)
     return send_from_directory(THUMB_DIR, f"{video_id}.jpg", mimetype="image/jpeg")
+
+
+@app.route("/chanimg/<channel_id>")
+def serve_channel_image(channel_id):
+    if not CHANNEL_ID_PATTERN.match(channel_id):
+        abort(404)
+
+    fname = f"chanimg_{channel_id}.jpg"
+    fpath = os.path.join(THUMB_DIR, fname)
+    if not os.path.exists(fpath):
+        try:
+            avatar_url = get_channel_avatar_url(channel_id)
+            if not avatar_url:
+                abort(404)
+            req = urllib.request.Request(
+                avatar_url,
+                headers={"User-Agent": "G3Video/1.0 (+https://github.com/ruhtrajer/G3Video)"},
+            )
+            with urllib.request.urlopen(req, timeout=THUMBNAIL_TIMEOUT) as resp, open(fpath, "wb") as f:
+                f.write(resp.read())
+        except Exception as e:
+            logger.warning("Impossible de récupérer le logo de la chaîne %s : %s", channel_id, e)
+            if os.path.exists(fpath):
+                os.remove(fpath)
+            abort(404)
+    if not os.path.exists(fpath):
+        abort(404)
+    return send_from_directory(THUMB_DIR, fname, mimetype="image/jpeg")
 
 
 @app.route("/videos/<video_id>.mov")
