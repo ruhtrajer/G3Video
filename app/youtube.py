@@ -58,6 +58,6 @@ def search_youtube(query: str, max_results: int = 10) -> list[dict]:
             "title": data.get("title", "Sans titre"),
             "channel": data.get("channel", data.get("uploader", "Inconnu")),
             "duration": _format_duration(duration),
-            "thumbnail": thumbnail,
+            "thumbnail": f"/thumb/{data['id']}" if thumbnail else "",
         })
     return results

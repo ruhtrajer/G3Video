@@ -4,7 +4,8 @@ import subprocess
 import tempfile
 import threading
 import logging
-from flask import Flask, render_template, request, send_from_directory, jsonify
+import urllib.request
+from flask import Flask, render_template, request, send_from_directory, jsonify, abort
 from app.youtube import search_youtube
 from app.transcoder import start_transcode, sanitize_video_id, sanitize_filename, FORMAT_MODES
 
@@ -14,6 +15,12 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 app.config["VIDEO_DIR"] = os.path.join(tempfile.gettempdir(), "g3video")
 os.makedirs(app.config["VIDEO_DIR"], exist_ok=True)
+
+THUMB_DIR = os.path.join(app.config["VIDEO_DIR"], "thumbs")
+os.makedirs(THUMB_DIR, exist_ok=True)
+
+THUMBNAIL_URL = "https://i.ytimg.com/vi/{video_id}/default.jpg"
+THUMBNAIL_TIMEOUT = 10
 
 tasks = {}
 tasks_lock = threading.Lock()
@@ -95,6 +102,30 @@ def status(video_id):
     with tasks_lock:
         task = tasks.get(video_id, {"status": "unknown"})
     return jsonify(task)
+
+
+@app.route("/thumb/<video_id>")
+def serve_thumbnail(video_id):
+    try:
+        sanitize_video_id(video_id)
+    except ValueError:
+        abort(404)
+
+    fpath = os.path.join(THUMB_DIR, f"{video_id}.jpg")
+    if not os.path.exists(fpath):
+        try:
+            req = urllib.request.Request(
+                THUMBNAIL_URL.format(video_id=video_id),
+                headers={"User-Agent": "G3Video/1.0 (+https://github.com/ruhtrajer/G3Video)"},
+            )
+            with urllib.request.urlopen(req, timeout=THUMBNAIL_TIMEOUT) as resp, open(fpath, "wb") as f:
+                f.write(resp.read())
+        except Exception as e:
+            logger.warning("Impossible de récupérer la miniature de %s : %s", video_id, e)
+            if os.path.exists(fpath):
+                os.remove(fpath)
+            abort(404)
+    return send_from_directory(THUMB_DIR, f"{video_id}.jpg", mimetype="image/jpeg")
 
 
 @app.route("/videos/<video_id>.mov")
