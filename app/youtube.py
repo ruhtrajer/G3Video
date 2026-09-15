@@ -48,10 +48,16 @@ def search_youtube(query: str, max_results: int = 10) -> list[dict]:
         except json.JSONDecodeError:
             continue
         duration = data.get("duration", 0)
+        thumbnail = data.get("thumbnail", "")
+        if not thumbnail:
+            thumbnails = data.get("thumbnails", [])
+            if thumbnails:
+                thumbnail = thumbnails[-1].get("url", "")
         results.append({
             "id": data["id"],
             "title": data.get("title", "Sans titre"),
             "channel": data.get("channel", data.get("uploader", "Inconnu")),
             "duration": _format_duration(duration),
+            "thumbnail": thumbnail,
         })
     return results
