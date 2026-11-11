@@ -1,27 +1,77 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+  "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="fr">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>G3Video - {% block title %}Accueil{% endblock %}</title>
-<style type="text/css">
-body { font-family: "Chicago", sans-serif; background: #fff; color: #000; margin: 20px; }
-a { color: #00f; }
-input, button { font-size: 16px; }
-.result { margin: 10px 0; padding: 10px; border: 1px solid #ccc; }
-.result .thumb { padding-right: 10px; vertical-align: top; }
-.result .thumb img { border: 1px solid #999; }
-.result .chanlogo { padding-right: 10px; vertical-align: top; }
-.result .chanlogo img { border: 1px solid #999; }
-.channel { margin: 10px 0; }
-</style>
+<title>G3Video &mdash; {% block title %}Accueil{% endblock %}</title>
 {% block head_extra %}{% endblock %}
 </head>
-<body>
-<div id="header">
-<h1><a href="/">G3Video</a></h1>
-</div>
-<div id="content">
+
+<body bgcolor="#C0C0C0" text="#000000" link="#0000CC" vlink="#660099"
+      topmargin="0" leftmargin="0" marginheight="0" marginwidth="0">
+
+<center>
+<br>
+
+<!-- MAIN WINDOW -->
+<table border="0" cellspacing="0" cellpadding="0" width="640">
+
+<!-- Window shadow -->
+<tr><td bgcolor="#808080">
+<table border="0" cellspacing="0" cellpadding="0">
+<tr><td bgcolor="#000000">
+<table border="0" cellspacing="0" cellpadding="0">
+<tr><td>
+
+<!-- Window frame -->
+<table border="0" cellspacing="1" cellpadding="0" bgcolor="#666666">
+<tr><td bgcolor="#EEEEEE">
+
+<!-- TITLE BAR -->
+<table border="0" cellspacing="0" cellpadding="0" width="100%">
+<tr>
+  <td bgcolor="#CCCCCC" height="18">
+    <table border="0" cellspacing="0" cellpadding="0" width="100%">
+    <tr>
+      <td align="center">
+        <font face="Charcoal, Geneva, Chicago, Arial, sans-serif" size="2" color="#000000">
+          <b><a href="/"><font face="Charcoal, Geneva, Chicago, Arial, sans-serif" size="2" color="#000000">G3Video</font></a> &mdash; {% block window_title %}Accueil{% endblock %}</b>
+        </font>
+      </td>
+    </tr>
+    </table>
+  </td>
+</tr>
+<tr><td bgcolor="#BBBBBB" height="1"></td></tr>
+</table>
+
+<!-- CONTENT AREA -->
+<table border="0" cellspacing="0" cellpadding="6" width="100%">
+<tr><td>
+
 {% block content %}{% endblock %}
-</div>
+
+<br>
+
+<font face="Geneva, Chicago, Arial, sans-serif" size="1" color="#888888">
+  G3Video &mdash; YouTube pour iMac G3 &mdash; QuickTime 5
+</font>
+
+</td></tr>
+</table>
+
+</td></tr>
+</table>
+
+</td></tr>
+</table>
+</td></tr>
+</table>
+
+</td></tr>
+</table>
+
+</center>
+
 </body>
 </html>

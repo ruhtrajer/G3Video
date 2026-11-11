@@ -1,30 +1,208 @@
 {% extends "base.html" %}
 {% block title %}Vidéo{% endblock %}
+{% block window_title %}Lecture{% endblock %}
 {% block head_extra %}
 {% if status in ("processing", "queued", "downloading", "transcoding") %}
 <meta http-equiv="refresh" content="3">
 {% endif %}
 {% endblock %}
 {% block content %}
-<h2>{{ title }}</h2>
-<p>{{ description }}</p>
+
+<font face="Charcoal, Geneva, Chicago, Arial, sans-serif" size="3"><b>{{ title }}</b></font>
+<br><br>
+
+{% if description %}
+<!-- DESCRIPTION PANEL -->
+<table border="0" cellspacing="0" cellpadding="0" width="100%">
+<tr><td bgcolor="#FFFFFF">
+<table border="0" cellspacing="1" cellpadding="0" width="100%">
+<tr><td bgcolor="#999999">
+<table border="0" cellspacing="0" cellpadding="6" width="100%">
+<tr>
+  <td bgcolor="#EEEEEE">
+    <font face="Geneva, Chicago, Arial, sans-serif" size="2">{{ description }}</font>
+  </td>
+</tr>
+</table>
+</td></tr>
+</table>
+</td></tr>
+</table>
+<br>
+{% endif %}
+
 {% if format_mode %}
-<p>Format : <strong>{{ "4:3 (recadr\u00e9)" if format_mode == "crop" else "Original (bandes noires)" }}</strong></p>
+<font face="Geneva, Chicago, Arial, sans-serif" size="1" color="#555555">
+  Format : <b>{{ "4:3 (recadré)" if format_mode == "crop" else "Original (bandes noires)" }}</b>
+</font>
+<br><br>
 {% endif %}
-<div id="status">
+
 {% if status == "ready" %}
-  <p><a href="/videos/{{ video_id }}.qtl">Regarder dans QuickTime</a></p>
-  <p>Alternative : <a href="/videos/{{ video_id }}.mov">Télécharger le .mov</a></p>
-{% elif status in ("processing", "downloading", "transcoding") %}
-  <p>{{ status }}... {{ progress }}%</p>
-{% elif status == "queued" %}
-  <p>Vidéo en attente de traitement...</p>
+<!-- READY PANEL -->
+<table border="0" cellspacing="0" cellpadding="0" width="100%">
+<tr><td bgcolor="#FFFFFF">
+<table border="0" cellspacing="1" cellpadding="0" width="100%">
+<tr><td bgcolor="#999999">
+<table border="0" cellspacing="0" cellpadding="8" width="100%">
+<tr>
+  <td bgcolor="#EEEEEE" align="center">
+    <font face="Charcoal, Geneva, Chicago, Arial, sans-serif" size="2">
+      <b>Vidéo prête.</b>
+    </font>
+  </td>
+</tr>
+</table>
+</td></tr>
+</table>
+</td></tr>
+</table>
+<br>
+<table border="0" cellspacing="2" cellpadding="0">
+<tr>
+  <td>
+    <table border="0" cellspacing="0" cellpadding="0">
+    <tr><td bgcolor="#FFFFFF">
+    <table border="0" cellspacing="1" cellpadding="0">
+    <tr><td bgcolor="#999999">
+    <font face="Charcoal, Geneva, Chicago, Arial, sans-serif" size="2">
+      <a href="/videos/{{ video_id }}.qtl"><font color="#000000">&nbsp;Regarder dans QuickTime&nbsp;</font></a>
+    </font>
+    </td></tr>
+    </table>
+    </td></tr>
+    </table>
+  </td>
+  <td>
+    <table border="0" cellspacing="0" cellpadding="0">
+    <tr><td bgcolor="#FFFFFF">
+    <table border="0" cellspacing="1" cellpadding="0">
+    <tr><td bgcolor="#999999">
+    <font face="Charcoal, Geneva, Chicago, Arial, sans-serif" size="2">
+      <a href="/videos/{{ video_id }}.mov"><font color="#000000">&nbsp;Télécharger le .mov&nbsp;</font></a>
+    </font>
+    </td></tr>
+    </table>
+    </td></tr>
+    </table>
+  </td>
+</tr>
+</table>
+
+{% elif status in ("processing", "queued", "downloading", "transcoding") %}
+<!-- PROGRESS PANEL -->
+<table border="0" cellspacing="0" cellpadding="0" width="100%">
+<tr><td bgcolor="#FFFFFF">
+<table border="0" cellspacing="1" cellpadding="0" width="100%">
+<tr><td bgcolor="#999999">
+<table border="0" cellspacing="0" cellpadding="8" width="100%">
+<tr>
+  <td bgcolor="#EEEEEE" align="center">
+    <font face="Charcoal, Geneva, Chicago, Arial, sans-serif" size="2">
+      {% if status == "downloading" %}
+      <b>Téléchargement de la vidéo...</b>
+      {% elif status == "transcoding" %}
+      <b>Transcodage pour QuickTime...</b>
+      {% elif status == "queued" %}
+      <b>Vidéo en attente de traitement...</b>
+      {% else %}
+      <b>Traitement en cours...</b>
+      {% endif %}
+    </font>
+    <br><br>
+
+    <!-- PROGRESS BAR (Platinum style with 3D border) -->
+    <table border="0" cellspacing="0" cellpadding="0" width="70%">
+    <tr><td bgcolor="#FFFFFF">
+    <table border="0" cellspacing="1" cellpadding="0" width="100%">
+    <tr><td bgcolor="#666666">
+    <table border="0" cellspacing="0" cellpadding="0" width="100%">
+    <tr>
+      <td bgcolor="#FFFFFF" height="16">
+        <table border="0" cellspacing="0" cellpadding="0" width="100%">
+        <tr>
+          {% if progress > 0 %}
+          <td bgcolor="#3366CC" width="{{ progress }}%">&nbsp;</td>
+          {% endif %}
+          {% if progress < 100 %}
+          <td bgcolor="#FFFFFF" width="{{ 100 - progress }}%">&nbsp;</td>
+          {% endif %}
+        </tr>
+        </table>
+      </td>
+    </tr>
+    </table>
+    </td></tr>
+    </table>
+    </td></tr>
+    </table>
+
+    <br>
+    <font face="Geneva, Chicago, Arial, sans-serif" size="1" color="#555555">
+      {{ progress }}% &mdash; rafraîchissement automatique
+    </font>
+  </td>
+</tr>
+</table>
+</td></tr>
+</table>
+</td></tr>
+</table>
+
 {% else %}
-  {% if error %}<p>Erreur : {{ error }}</p>{% endif %}
+<!-- ERROR / UNKNOWN PANEL -->
+<table border="0" cellspacing="0" cellpadding="0" width="100%">
+<tr><td bgcolor="#FFFFFF">
+<table border="0" cellspacing="1" cellpadding="0" width="100%">
+<tr><td bgcolor="{% if error %}#CC0000{% else %}#999999{% endif %}">
+<table border="0" cellspacing="0" cellpadding="4" width="100%">
+<tr>
+  <td bgcolor="{% if error %}#FFCCCC{% else %}#EEEEEE{% endif %}">
+    <font face="Geneva, Chicago, Arial, sans-serif" size="2"
+          color="{% if error %}#990000{% else %}#555555{% endif %}">
+      {% if error %}<b>Erreur :</b> {{ error }}{% else %}<i>Statut indisponible.</i>{% endif %}
+    </font>
+  </td>
+</tr>
+</table>
+</td></tr>
+</table>
+</td></tr>
+</table>
 {% endif %}
-</div>
+
+<br>
+
+<!-- ACTION BUTTONS -->
+<table border="0" cellspacing="2" cellpadding="0">
+<tr>
 {% if back %}
-<p><a href="{{ back }}">Retour à la liste des résultats</a></p>
+  <td>
+    <table border="0" cellspacing="0" cellpadding="0">
+    <tr><td bgcolor="#FFFFFF">
+    <table border="0" cellspacing="1" cellpadding="0">
+    <tr><td bgcolor="#999999">
+    <font face="Charcoal, Geneva, Chicago, Arial, sans-serif" size="2">
+      <a href="{{ back }}"><font color="#000000">&nbsp;Retour à la liste des résultats&nbsp;</font></a>
+    </font>
+    </td></tr>
+    </table>
+    </td></tr>
+    </table>
+  </td>
 {% endif %}
-<p><a href="/">Retour à l'accueil</a></p>
+  <td>
+    <table border="0" cellspacing="0" cellpadding="0">
+    <tr><td bgcolor="#FFFFFF">
+    <table border="0" cellspacing="1" cellpadding="0">
+    <tr><td bgcolor="#999999">
+    <form method="GET" action="/"><input type="submit" value=" Retour à l'accueil "></form>
+    </td></tr>
+    </table>
+    </td></tr>
+    </table>
+  </td>
+</tr>
+</table>
+
 {% endblock %}

@@ -72,7 +72,7 @@
 | `app/server.py` | Serveur Flask — routes HTTP, templates, nettoyage automatique |
 | `app/youtube.py` | Recherche YouTube via `yt-dlp --flat-playlist --dump-json` |
 | `app/transcoder.py` | File d'attente asynchrone : download + transcodage .mov |
-| `app/templates/` | Pages HTML 4.01 Strict (compatibles Classilla/IE5/Netscape) |
+| `app/templates/` | Pages HTML 4.01 Transitional, style Mac OS 9 Platinum (compatibles Classilla/IE5/Netscape) |
 | `run.py` | Point d'entrée du serveur |
 
 ### Format de sortie

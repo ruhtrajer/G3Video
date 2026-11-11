@@ -1,9 +1,53 @@
 {% extends "base.html" %}
 {% block title %}Accueil{% endblock %}
+{% block window_title %}Recherche YouTube{% endblock %}
 {% block content %}
+
+<font face="Charcoal, Geneva, Chicago, Arial, sans-serif" size="2"><b>Rechercher une vidéo</b></font>
+<br><br>
+
 <form method="get" action="/search">
-<label for="q">Rechercher sur YouTube :</label><br>
-<input type="text" name="q" id="q" size="40">
-<button type="submit">Chercher</button>
+<table border="0" cellspacing="0" cellpadding="0" width="100%">
+<tr><td bgcolor="#FFFFFF">
+<table border="0" cellspacing="1" cellpadding="0" width="100%">
+<tr><td bgcolor="#999999">
+<table border="0" cellspacing="0" cellpadding="6" width="100%">
+<tr>
+  <td bgcolor="#DDDDDD">
+    <font face="Charcoal, Geneva, Chicago, Arial, sans-serif" size="2">
+      <b>Mots-clés :</b>
+    </font>
+    <br>
+    <table border="0" cellspacing="0" cellpadding="0" width="100%">
+    <tr><td bgcolor="#666666">
+    <table border="0" cellspacing="1" cellpadding="0" width="100%">
+    <tr><td bgcolor="#111133">
+    <table border="0" cellspacing="0" cellpadding="0" width="100%">
+    <tr><td>
+    <input type="text" name="q" id="q" size="40" value=""
+           style="width:100%;background-color:#111133;color:#55EE55;font-family:Monaco,Courier,monospace;font-size:12px;border:none;">
+    </td></tr>
+    </table>
+    </td></tr>
+    </table>
+    </td></tr>
+    </table>
+    <br>
+    <input type="submit" value=" Chercher ">
+  </td>
+</tr>
+</table>
+</td></tr>
+</table>
+</td></tr>
+</table>
 </form>
+
+<br>
+
+<font face="Geneva, Chicago, Arial, sans-serif" size="1" color="#555555">
+  Les vidéos sont téléchargées puis converties en 320x240 pour QuickTime 5.
+  Privilégiez les vidéos courtes (moins de 3 minutes).
+</font>
+
 {% endblock %}
